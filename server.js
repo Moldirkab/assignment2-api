@@ -86,14 +86,18 @@ app.get("/api/random-user", async (req, res) => {
   // --- Exchange Rates ---
 let exchangeRates = {};
 try {
-  // Use currency from extractedCountry if available, otherwise default to EUR
   let currencyCode = "EUR";
-  if (extractedCountry.currency) {
-    const match = extractedCountry.currency.match(/\((.*?)\)/);
-    if (match && match[1]) {
-      currencyCode = match[1];
-    }
+
+if (
+  extractedCountry.currency &&
+  extractedCountry.currency !== "N/A"
+) {
+  const match = extractedCountry.currency.match(/\((.*?)\)/);
+  if (match?.[1]) {
+    currencyCode = match[1];
   }
+}
+
 
   const exchangeApiKey = process.env.EXCHANGERATE_API_KEY;
 
@@ -117,8 +121,6 @@ try {
   };
 }
 
-
-
   // --- NewsAPI ---
   try {
     const newsApiKey = process.env.NEWSAPI_KEY;
@@ -141,6 +143,7 @@ try {
   res.json({
     user: extractedUser,
     country: extractedCountry,
+     exchangeRates,
     news: newsArticles
   });
 });

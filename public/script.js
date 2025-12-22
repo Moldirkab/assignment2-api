@@ -10,13 +10,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       const { user, country, news, exchangeRates } = data;
 
-      // safe access with optional chaining
       const usdRate = exchangeRates?.USD || "N/A";
       const kztRate = exchangeRates?.KZT || "N/A";
       const currencyCode = country.currency?.split("(")[1]?.replace(")", "") || "N/A";
 
       container.innerHTML = `
+      <div class="row1">
         <div class="card">
+              <h2>${country.name}</h2>
+              <img src="${country.flag}" alt="Flag of ${country.name}" width="100">
+              <p><strong>Capital:</strong> ${country.capital}</p>
+              <p><strong>Languages:</strong> ${country.languages}</p>
+              <p><strong>Currency:</strong> ${country.currency}</p>
+          </div>
+           <div class="card">
           <img src="${user.picture || '/default.png'}" alt="Profile Picture">
           <h2>${user.firstName} ${user.lastName}</h2>
           <p><strong>Gender:</strong> ${user.gender}</p>
@@ -25,23 +32,25 @@ document.addEventListener("DOMContentLoaded", () => {
           <p><strong>City:</strong> ${user.city}</p>
           <p><strong>Country:</strong> ${user.country}</p>
           <p><strong>Address:</strong> ${user.address}</p>
-
-          <hr>
-          <h3>Exchange Rates</h3>
-          <p>1 ${currencyCode} = ${usdRate} USD</p>
-          <p>1 ${currencyCode} = ${kztRate} KZT</p>
-
-          <hr>
-          <h3>Top News Headlines in ${user.country}</h3>
-          ${news.length ? news.map(n => `
-            <div class="news-card">
-              <h4>${n.title}</h4>
-              ${n.image ? `<img src="${n.image}" alt="News Image" width="150">` : ""}
-              <p>${n.description}</p>
-              <a href="${n.url}" target="_blank">Read more</a>
-            </div>
-          `).join("") : "<p>No news available.</p>"}
         </div>
+        <div class="card">
+          <h3>Currency info</h3>
+          <p>1 ${exchangeRates.base} = ${exchangeRates.USD} USD</p>
+          <p>1 ${exchangeRates.base} = ${exchangeRates.KZT} KZT</p>
+        </div>
+        </div>  
+        <h1>Latest News from ${country.name}</h1>
+
+        <div class="row2">
+            ${news.length ? news.map(n => `
+              <div class="news-card">
+                <h4>${n.title}</h4>
+                ${n.image ? `<img src="${n.image}" alt="News Image" width="150">` : ""}
+                <p>${n.description}</p>
+                <a href="${n.url}" target="_blank">Read more</a>
+              </div>
+            `).join("") : "<p>No news available.</p>"}
+          </div>
       `;
 
     } catch (error) {
