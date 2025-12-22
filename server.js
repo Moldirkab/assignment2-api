@@ -22,37 +22,38 @@ app.get("/api/random-user", async (req, res) => {
   let extractedUser = {};
   let extractedCountry = {};
   let newsArticles = [];
+  let exchangeRates = {};
 
-  // ---  Random User ---
+  // --- Random User ---
   try {
     const randomUserResp = await axios.get("https://randomuser.me/api/");
     const user = randomUserResp.data.results[0];
 
     extractedUser = {
-      firstName: user?.name?.first || "John",
-      lastName: user?.name?.last || "Doe",
-      gender: user?.gender || "N/A",
-      age: user?.dob?.age || 30,
-      dob: user?.dob?.date || "1990-01-01T00:00:00.000Z",
-      picture: user?.picture?.large || "https://randomuser.me/api/portraits/lego/1.jpg",
-      city: user?.location?.city || "Unknown",
-      country: user?.location?.country || "USA",
+      firstName: user?.name?.first || "No info available",
+      lastName: user?.name?.last || "No info available",
+      gender: user?.gender || "No info available",
+      age: user?.dob?.age ?? "No info available",
+      dob: user?.dob?.date || "No info available",
+      picture: user?.picture?.large || "",
+      city: user?.location?.city || "No info available",
+      country: user?.location?.country || "No info available",
       address: user?.location?.street
         ? `${user.location.street.name} ${user.location.street.number}`
-        : "123 Main St"
+        : "No info available"
     };
   } catch (error) {
     console.error("RandomUser API failed:", error.message);
     extractedUser = {
-      firstName: "John",
-      lastName: "Doe",
-      gender: "male",
-      age: 30,
-      dob: "1993-01-01T00:00:00.000Z",
-      picture: "https://randomuser.me/api/portraits/lego/1.jpg",
-      city: "New York",
-      country: "USA",
-      address: "5th Avenue 101"
+      firstName: "No info available",
+      lastName: "No info available",
+      gender: "No info available",
+      age: "No info available",
+      dob: "No info available",
+      picture: "",
+      city: "No info available",
+      country: "No info available",
+      address: "No info available"
     };
   }
 
@@ -66,60 +67,54 @@ app.get("/api/random-user", async (req, res) => {
     const countryData = countryResp.data[0];
 
     extractedCountry = {
-      name: countryData?.name || extractedUser.country,
-      capital: countryData?.capital || "N/A",
-      languages: countryData?.languages?.map(l => l.name).join(", ") || "N/A",
-      currency: countryData?.currencies?.map(c => `${c.name} (${c.code})`).join(", ") || "N/A",
+      name: countryData?.name || "No info available",
+      capital: countryData?.capital || "No info available",
+      languages: countryData?.languages?.map(l => l.name).join(", ") || "No info available",
+      currency: countryData?.currencies?.map(c => `${c.name} (${c.code})`).join(", ") || "No info available",
       flag: countryData?.flag || ""
     };
   } catch (error) {
     console.error("Countrylayer API failed:", error.message);
     extractedCountry = {
-      name: extractedUser.country,
-      capital: "Unknown",
-      languages: "English",
-      currency: "USD",
+      name: "No info available",
+      capital: "No info available",
+      languages: "No info available",
+      currency: "No info available",
       flag: ""
     };
   }
 
   // --- Exchange Rates ---
-let exchangeRates = {};
-try {
-  let currencyCode = "EUR";
+  try {
+    let currencyCode = "EUR";
 
-if (
-  extractedCountry.currency &&
-  extractedCountry.currency !== "N/A"
-) {
-  const match = extractedCountry.currency.match(/\((.*?)\)/);
-  if (match?.[1]) {
-    currencyCode = match[1];
+    if (extractedCountry.currency && extractedCountry.currency !== "No info available") {
+      const match = extractedCountry.currency.match(/\((.*?)\)/);
+      if (match?.[1]) {
+        currencyCode = match[1];
+      }
+    }
+
+    const exchangeApiKey = process.env.EXCHANGERATE_API_KEY;
+    const exchangeResp = await axios.get(
+      `https://v6.exchangerate-api.com/v6/${exchangeApiKey}/latest/${currencyCode}`
+    );
+
+    const rates = exchangeResp.data.conversion_rates;
+
+    exchangeRates = {
+      base: currencyCode,
+      USD: rates?.USD?.toFixed(2) || "No info available",
+      KZT: rates?.KZT?.toFixed(2) || "No info available"
+    };
+  } catch (error) {
+    console.error("ExchangeRate API failed:", error.message);
+    exchangeRates = {
+      base: "No info available",
+      USD: "No info available",
+      KZT: "No info available"
+    };
   }
-}
-
-
-  const exchangeApiKey = process.env.EXCHANGERATE_API_KEY;
-
-  const exchangeResp = await axios.get(
-    `https://v6.exchangerate-api.com/v6/${exchangeApiKey}/latest/${currencyCode}`
-  );
-
-  const rates = exchangeResp.data.conversion_rates;
-
-  exchangeRates = {
-    base: currencyCode,
-    USD: rates["USD"] ? rates["USD"].toFixed(2) : "N/A",
-    KZT: rates["KZT"] ? rates["KZT"].toFixed(2) : "N/A"
-  };
-} catch (error) {
-  console.error("ExchangeRate API failed:", error.message);
-  exchangeRates = {
-    base: "EUR",
-    USD: "1.08",
-    KZT: "495.20"
-  };
-}
 
   // --- NewsAPI ---
   try {
@@ -143,10 +138,11 @@ if (
   res.json({
     user: extractedUser,
     country: extractedCountry,
-     exchangeRates,
-    news: newsArticles
+    exchangeRates,
+    news: newsArticles.length ? newsArticles : [{ title: "No news available" }]
   });
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
