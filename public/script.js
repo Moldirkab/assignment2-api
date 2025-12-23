@@ -35,8 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="card">
           <h3>Currency info</h3>
-          <p>1 ${exchangeRates.base} = ${exchangeRates.USD} USD</p>
-          <p>1 ${exchangeRates.base} = ${exchangeRates.KZT} KZT</p>
+          <p> ${exchangeRates.USD} USD</p>
+          <p> ${exchangeRates.KZT} KZT</p>
         </div>
         </div>  
         <h1>Latest News from ${country.name}</h1>
